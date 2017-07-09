@@ -3,6 +3,8 @@
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
+// change here
+
 byte post[8] = {
   B00111,
   B00100,
