@@ -9,36 +9,8 @@ int button = 2; // input pin
 const String answer = "applesauce";
 String displayWord = "";
 int errorCount = 0;
-char selectorCharacter = 97;
+char selectorCharacter = 97; // starts at a and will iterate in loop
 static bool playing = false;
-
-
-void initializeGraphics()
-{
-  lcd.clear();
-  lcd.write(byte(0));
-  lcd.write(byte(1));
-  lcd.setCursor(0, 1);
-  lcd.print("l");
-  lcd.setCursor(3,0);
-  lcd.print("Pick a char:");
-  //Add Kevins letterspacings to GUI on bottom row
-
-  lcd.setCursor(2, 1);
-  for (int i = 0; i < answer.length(); i++) 
-    displayWord += "_";
-
-  lcd.print(displayWord);
-
-  //Integrate iteration through alphabet in top right character space
-
-
-}
-
-void buttonPush()
-{
-  buttonPushed = true;
-}
 
 void setup() 
 {
@@ -57,64 +29,41 @@ void setup()
 
 void loop() 
 {
-  
   checkIfPlaying();
 
-  bool found = false;
-
+  // prints selector character in top right
+  // uncomment this if you want iterator
+  /* 
   lcd.setCursor(15, 0);
-  lcd.print(selectorCharacter);
+  lcd.print(selectorCharacter); */
 
-  for (int i = 0; i < answer.length(); i++) {
 
-    if (selectorCharacter == answer[i]) {
-      displayWord[i] = answer[i];
-      found = true;
-    }
-    
-  }
+  //comment this if you want to iterator
+  while (Serial.available() < 1) {}
+  selectorCharacter = Serial.readString()[0];
 
-  if (!found) {
-    errorCount++;
-    drawHangman(errorCount);
-  }
+  checkInput();
 
-  // lcd.clear();
   lcd.setCursor(2, 1);
   lcd.print(displayWord);
 
   // Print error count to serial
   Serial.print("Error count: ");
   Serial.print(errorCount);
+  Serial.println("");
 
+// iterates character
+// uncomment this if you want iterator
+/*
   if (selectorCharacter < 122)
-    selectorCharacter++;
+    selectorCharacter++; */
 
+  checkIfGameOver();
   delay(500);
 
-  if (errorCount == 6) 
-  {
-    delay(1000);
-    lcd.clear();
-    playing == false;
-    lcd.print("GAME OVER!");
-    while (!buttonPushed){}
-  }
-
 }
 
-void drawHangman(int errorCount) 
-{
-
-  if (errorCount == 1) {
-    lcd.setCursor(1, 0);
-    lcd.write(byte(2));
-  } else if (errorCount > 1) {
-    lcd.setCursor(1, 1);
-    lcd.write(byte(errorCount + 1));
-  }
-
-}
+// --------------------------------------------------------------------------
 
 void checkIfPlaying() {
 
@@ -136,4 +85,75 @@ void checkIfPlaying() {
   }
 
 }
+
+void initializeGraphics()
+{
+  lcd.clear();
+  lcd.write(byte(0));
+  lcd.write(byte(1));
+  lcd.setCursor(0, 1);
+  lcd.print("l");
+  lcd.setCursor(3,0);
+  lcd.print("Pick a char:");
+
+
+  //Add Kevins letterspacings to GUI on bottom row
+  lcd.setCursor(2, 1);
+  for (int i = 0; i < answer.length(); i++) 
+    displayWord += "_";
+
+  lcd.print(displayWord);
+}
+
+void buttonPush()
+{
+  buttonPushed = true;
+}
+
+void drawHangman(int errorCount) 
+{
+  if (errorCount == 1) {
+    lcd.setCursor(1, 0);
+    lcd.write(byte(2));
+  } else if (errorCount > 1) {
+    lcd.setCursor(1, 1);
+    lcd.write(byte(errorCount + 1));
+  }
+
+}
+
+void checkInput() {
+  bool found = false;
+
+  for (int i = 0; i < answer.length(); i++) {
+    if (selectorCharacter == answer[i]) {
+      displayWord[i] = answer[i];
+      found = true;
+    }
+  }
+
+  if (!found) {
+    errorCount++;
+    drawHangman(errorCount);
+  }
+}
+
+void checkIfGameOver() {
+  if (errorCount == 6) 
+  {
+    delay(1000);
+    lcd.clear();
+    playing == false;
+    lcd.print("GAME OVER!");
+    while (!buttonPushed){}
+  } else if (displayWord == answer)
+  {
+    delay(1000);
+    lcd.clear();
+    playing == false;
+    lcd.print("Lock unlocked!");
+    while(!buttonPushed){}
+  }
+}
+
 

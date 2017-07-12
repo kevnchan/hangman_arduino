@@ -1,3 +1,6 @@
+#include <LiquidCrystal.h>
+#include <Arduino.h>
+
 byte post[8] = {
   B00111,
   B00100,
