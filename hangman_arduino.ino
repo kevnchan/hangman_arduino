@@ -24,25 +24,28 @@ void setup()
   lcd.createChar(6, right_foot);
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
+  attachInterrupt(0, buttonPush, RISING);
   // Remember to include interrupts
 }
 
 void loop() 
 {
   checkIfPlaying();
-
   // prints selector character in top right
   // uncomment this if you want iterator
-  /* 
-  lcd.setCursor(15, 0);
-  lcd.print(selectorCharacter); */
 
+  lcd.setCursor(15, 0);
+  lcd.print(selectorCharacter);
+  delay(1500);
 
   //comment this if you want to iterator
-  while (Serial.available() < 1) {}
-  selectorCharacter = Serial.readString()[0];
-
-  checkInput();
+  /*while (Serial.available() < 1) {}
+  selectorCharacter = Serial.readString()[0];*/
+  if(buttonPushed)
+  {
+    checkInput();
+    buttonPushed = false;
+  }
 
   lcd.setCursor(2, 1);
   lcd.print(displayWord);
@@ -54,16 +57,18 @@ void loop()
 
 // iterates character
 // uncomment this if you want iterator
-/*
+
   if (selectorCharacter < 122)
-    selectorCharacter++; */
+    selectorCharacter++;
+  else if (selectorCharacter == 122)
+    selectorCharacter = 97;
 
   checkIfGameOver();
-  delay(500);
 
 }
 
 // --------------------------------------------------------------------------
+
 
 void checkIfPlaying() {
 
@@ -73,15 +78,10 @@ void checkIfPlaying() {
     lcd.print("Press select to");
     lcd.setCursor(0,1);
     lcd.print("play!");
-    delay(1000);
-    buttonPushed = true;
-
-    if (buttonPushed)
-    {
+    while(!buttonPushed){ delay(500); /*wtf is this garbage ass shit*/ }
     initializeGraphics();
     playing = true;
     buttonPushed = false;
-    }
   }
 
 }
@@ -139,7 +139,7 @@ void checkInput() {
 }
 
 void checkIfGameOver() {
-  if (errorCount == 6) 
+  if (errorCount > 5) 
   {
     delay(1000);
     lcd.clear();
