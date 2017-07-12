@@ -114,6 +114,8 @@ void initializeGraphics()
   lcd.print("l");
   lcd.setCursor(3,0);
   lcd.print("Pick a char:");
+  //Add Kevins letterspacings to GUI on bottom row
+  //Integrate iteration through alphabet in top right character space
 }
 
 void buttonPush()
@@ -132,7 +134,7 @@ void setup()
   lcd.createChar(6, right_foot);
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
-  //attachInterrupt(digitalPinToInterrupt(button), buttonPush, FALLING);
+  //Include interrupts
 }
 
 void loop() 
@@ -161,9 +163,9 @@ void loop()
 
   if (errorCount == 6) 
   {
-    drawHangman(++errorCount);
-    playing == false;
+    delay(1000);
     lcd.clear();
+    playing == false;
     lcd.print("GAME OVER!");
     while (!buttonPushed){}
   }
