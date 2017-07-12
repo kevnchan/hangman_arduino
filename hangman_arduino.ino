@@ -1,109 +1,17 @@
 #include <LiquidCrystal.h>
 #include <Arduino.h>
+#include "custom_characters.h"
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
-String alpha = "abcdefghijklmnopqrstuvwxyz";
 static bool buttonPushed = false;
-int button = 2;
-volatile int lcd_key = 0;
-int adc_key_in = 0;
+int button = 2; // input pin
 
-#define btnRIGHT  0
-#define btnUP     1
-#define btnDOWN   2
-#define btnLEFT   3
-#define btnSELECT 4
-#define btnNONE   5
-
-byte post[8] = {
-  B00111,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-};
-
-byte noose[8] = {
-  B11100,
-  B00100,
-  B00100,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-};
-
-byte head[8] = {
-  B11100,
-  B00100,
-  B00100,
-  B01110,
-  B10001,
-  B10001,
-  B10001,
-  B01110,
-};
-
-byte body[8] = {
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-};
-
-byte right_hand[8] = {
-  B00100,
-  B00101,
-  B00110,
-  B00100,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-};
-
-byte left_hand[8] = {
-  B00100,
-  B10101,
-  B01110,
-  B00100,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-};
-
-byte right_foot[8] = {
-  B00100,
-  B10101,
-  B01110,
-  B00100,
-  B00010,
-  B00001,
-  B00000,
-  B00000,
-};
-
-byte left_foot[8] = {
-  B00100,
-  B10101,
-  B01110,
-  B00100,
-  B01010,
-  B10001,
-  B00000,
-  B00000,
-};
-
+const String answer = "applesauce";
+String displayWord = "";
 int errorCount = 0;
+char selectorCharacter = 97;
+static bool playing = false;
+
 
 void initializeGraphics()
 {
@@ -115,7 +23,16 @@ void initializeGraphics()
   lcd.setCursor(3,0);
   lcd.print("Pick a char:");
   //Add Kevins letterspacings to GUI on bottom row
+
+  lcd.setCursor(2, 1);
+  for (int i = 0; i < answer.length(); i++) 
+    displayWord += "_";
+
+  lcd.print(displayWord);
+
   //Integrate iteration through alphabet in top right character space
+
+
 }
 
 void buttonPush()
@@ -125,6 +42,7 @@ void buttonPush()
 
 void setup() 
 {
+  Serial.begin(9600);
 	lcd.createChar(0, post);
   lcd.createChar(1, noose);
   lcd.createChar(2, head);
@@ -134,13 +52,72 @@ void setup()
   lcd.createChar(6, right_foot);
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
-  //Include interrupts
+  // Remember to include interrupts
 }
 
 void loop() 
 {
-  static bool playing = false;
   
+  checkIfPlaying();
+
+  bool found = false;
+
+  lcd.setCursor(15, 0);
+  lcd.print(selectorCharacter);
+
+  for (int i = 0; i < answer.length(); i++) {
+
+    if (selectorCharacter == answer[i]) {
+      displayWord[i] = answer[i];
+      found = true;
+    }
+    
+  }
+
+  if (!found) {
+    errorCount++;
+    drawHangman(errorCount);
+  }
+
+  // lcd.clear();
+  lcd.setCursor(2, 1);
+  lcd.print(displayWord);
+
+  // Print error count to serial
+  Serial.print("Error count: ");
+  Serial.print(errorCount);
+
+  if (selectorCharacter < 122)
+    selectorCharacter++;
+
+  delay(500);
+
+  if (errorCount == 6) 
+  {
+    delay(1000);
+    lcd.clear();
+    playing == false;
+    lcd.print("GAME OVER!");
+    while (!buttonPushed){}
+  }
+
+}
+
+void drawHangman(int errorCount) 
+{
+
+  if (errorCount == 1) {
+    lcd.setCursor(1, 0);
+    lcd.write(byte(2));
+  } else if (errorCount > 1) {
+    lcd.setCursor(1, 1);
+    lcd.write(byte(errorCount + 1));
+  }
+
+}
+
+void checkIfPlaying() {
+
   if (!playing)
   {
     lcd.clear();
@@ -156,30 +133,6 @@ void loop()
     playing = true;
     buttonPushed = false;
     }
-  }
-  
-  delay(1000);
-  drawHangman(++errorCount);
-
-  if (errorCount == 6) 
-  {
-    delay(1000);
-    lcd.clear();
-    playing == false;
-    lcd.print("GAME OVER!");
-    while (!buttonPushed){}
-  }
-}
-
-void drawHangman(int errorCount) 
-{
-
-  if (errorCount == 1) {
-    lcd.setCursor(1, 0);
-    lcd.write(byte(2));
-  } else if (errorCount > 1) {
-    lcd.setCursor(1, 1);
-    lcd.write(byte(errorCount + 1));
   }
 
 }
