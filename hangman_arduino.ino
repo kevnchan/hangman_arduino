@@ -2,8 +2,18 @@
 #include <Arduino.h>
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+String alpha = "abcdefghijklmnopqrstuvwxyz";
+static bool buttonPushed = false;
+int button = 2;
+volatile int lcd_key = 0;
+int adc_key_in = 0;
 
-// change here
+#define btnRIGHT  0
+#define btnUP     1
+#define btnDOWN   2
+#define btnLEFT   3
+#define btnSELECT 4
+#define btnNONE   5
 
 byte post[8] = {
   B00111,
@@ -95,7 +105,24 @@ byte left_foot[8] = {
 
 int errorCount = 0;
 
-void setup() {
+void initializeGraphics()
+{
+  lcd.clear();
+  lcd.write(byte(0));
+  lcd.write(byte(1));
+  lcd.setCursor(0, 1);
+  lcd.print("l");
+  lcd.setCursor(3,0);
+  lcd.print("Pick a char:");
+}
+
+void buttonPush()
+{
+  buttonPushed = true;
+}
+
+void setup() 
+{
 	lcd.createChar(0, post);
   lcd.createChar(1, noose);
   lcd.createChar(2, head);
@@ -105,21 +132,45 @@ void setup() {
   lcd.createChar(6, right_foot);
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
-  lcd.clear();
-  lcd.write(byte(0));
-  lcd.write(byte(1));
-  lcd.setCursor(0, 1);
-  lcd.print("l");
+  //attachInterrupt(digitalPinToInterrupt(button), buttonPush, FALLING);
 }
 
-void loop() {
+void loop() 
+{
+  static bool playing = false;
+  
+  if (!playing)
+  {
+    lcd.clear();
+    lcd.print("Press select to");
+    lcd.setCursor(0,1);
+    lcd.print("play!");
+    delay(1000);
+    buttonPushed = true;
+
+    if (buttonPushed)
+    {
+    initializeGraphics();
+    playing = true;
+    buttonPushed = false;
+    }
+  }
+  
   delay(1000);
   drawHangman(++errorCount);
 
-  while (errorCount == 6) {}
+  if (errorCount == 6) 
+  {
+    drawHangman(++errorCount);
+    playing == false;
+    lcd.clear();
+    lcd.print("GAME OVER!");
+    while (!buttonPushed){}
+  }
 }
 
-void drawHangman(int errorCount) {
+void drawHangman(int errorCount) 
+{
 
   if (errorCount == 1) {
     lcd.setCursor(1, 0);
@@ -130,3 +181,4 @@ void drawHangman(int errorCount) {
   }
 
 }
+
