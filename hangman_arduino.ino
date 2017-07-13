@@ -9,7 +9,9 @@ int button = 2; // input pin
 const String answer = "applesauce";
 String displayWord = "";
 int errorCount = 0;
-char selectorCharacter = 97; // starts at a and will iterate in loop
+// char selectorCharacter = 97; // starts at a and will iterate in loop
+String alphabet = "abcdefghijklmnopqrstuvwxyz";
+int selectorCharacter = 0;
 static bool playing = false;
 
 void setup() 
@@ -25,7 +27,7 @@ void setup()
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
   attachInterrupt(0, buttonPush, RISING);
-  // Remember to include interrupts
+  // Remember to include interrupts   
 }
 
 void loop() 
@@ -35,15 +37,15 @@ void loop()
   // uncomment this if you want iterator
 
   lcd.setCursor(15, 0);
-  lcd.print(selectorCharacter);
-  delay(1500);
+  lcd.print(alphabet[selectorCharacter]);
+  delay(500);
 
   //comment this if you want to iterator
   /*while (Serial.available() < 1) {}
   selectorCharacter = Serial.readString()[0];*/
-  if(buttonPushed)
-  {
+  if (buttonPushed) {
     checkInput();
+    alphabet.remove(selectorCharacter, 1);
     buttonPushed = false;
   }
 
@@ -51,17 +53,16 @@ void loop()
   lcd.print(displayWord);
 
   // Print error count to serial
-  Serial.print("Error count: ");
-  Serial.print(errorCount);
-  Serial.println("");
+  // Serial.print("Error count: ");
+  // Serial.print(errorCount);
+  // Serial.println("");
 
 // iterates character
 // uncomment this if you want iterator
-
-  if (selectorCharacter < 122)
+  if (selectorCharacter < alphabet.length() - 1)
     selectorCharacter++;
-  else if (selectorCharacter == 122)
-    selectorCharacter = 97;
+  else if (selectorCharacter == alphabet.length() - 1)
+    selectorCharacter = 0;
 
   checkIfGameOver();
 
@@ -126,7 +127,7 @@ void checkInput() {
   bool found = false;
 
   for (int i = 0; i < answer.length(); i++) {
-    if (selectorCharacter == answer[i]) {
+    if (alphabet[selectorCharacter] == answer[i]) {
       displayWord[i] = answer[i];
       found = true;
     }
