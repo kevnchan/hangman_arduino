@@ -16,6 +16,8 @@ static bool playing = false;
 
 volatile int voltage = 0;
 volatile long millsec = 0;
+volatile bool secPassed = 0;
+int time = 61;
 
 void setup() 
 {
@@ -45,14 +47,22 @@ void loop()
 {
   checkIfPlaying();
   // prints selector character in top right
-  // uncomment this if you want iterator
+
+  //timer area
+  if (secPassed && time > 0) {
+    time--;
+    printTime();    
+    secPassed = false;
+  }
+
+  if (time == 0)
+    errorCount = 6; //ends game
+
+  //timer area
 
   lcd.setCursor(15, 0);
   lcd.print(alphabet[selectorCharacter]);
 
-  //comment this if you want to iterator
-  /*while (Serial.available() < 1) {}
-  selectorCharacter = Serial.readString()[0];*/
   if (buttonPushed && voltage > 920 && voltage < 924) { // left button
 
     cli();
@@ -99,19 +109,6 @@ void loop()
   lcd.setCursor(2, 1);
   lcd.print(displayWord);
 
-  // Print error count to serial
-  // Serial.print("Error count: ");
-  // Serial.print(errorCount);
-  // Serial.println("");
-
-// iterates character
-// uncomment this if you want iterator
-/*
-  if (selectorCharacter < alphabet.length() - 1)
-    selectorCharacter++;
-  else if (selectorCharacter == alphabet.length() - 1)
-    selectorCharacter = 0; */
-
   checkIfGameOver();
 
 }
@@ -143,8 +140,8 @@ void initializeGraphics()
   lcd.write(byte(1));
   lcd.setCursor(0, 1);
   lcd.print("l");
-  lcd.setCursor(5,0);
-  lcd.print("Pick char:");
+  lcd.setCursor(8,0);
+  lcd.print("Select:");
 
 
   //Add Kevins letterspacings to GUI on bottom row
@@ -210,11 +207,24 @@ void checkIfGameOver() {
 ISR(TIMER2_OVF_vect) { 
   millsec++;
   TCNT2 = 5;
+  if (millsec % 1000 == 0)
+    secPassed = true;
 }
 
 void delayCustom(long duration) {
   long startTime = millsec;
   while (millsec - startTime < duration){}
+}
+
+void printTime() {
+  int seconds = time % 60;
+  int minutes = (time - seconds) / 60;
+  lcd.setCursor(3, 0);
+  lcd.print(minutes);
+  lcd.print(":");
+  if (seconds < 10)
+    lcd.print("0");
+  lcd.print(seconds);
 }
 
 
