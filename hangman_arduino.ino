@@ -14,6 +14,8 @@ String alphabet = "abcdefghijklmnopqrstuvwxyz";
 int selectorCharacter = 0;
 static bool playing = false;
 
+volatile int voltage = 0;
+
 void setup() 
 {
   Serial.begin(9600);
@@ -38,15 +40,51 @@ void loop()
 
   lcd.setCursor(15, 0);
   lcd.print(alphabet[selectorCharacter]);
-  delay(500);
 
   //comment this if you want to iterator
   /*while (Serial.available() < 1) {}
   selectorCharacter = Serial.readString()[0];*/
-  if (buttonPushed) {
+  if (buttonPushed && voltage > 500 && voltage < 800) { // left button
+
+    cli();
+    if (selectorCharacter == 0)
+      selectorCharacter = alphabet.length() - 1;
+    else
+      selectorCharacter--;
+    
+    lcd.setCursor(15, 0);
+    lcd.print(alphabet[selectorCharacter]);
+    buttonPushed = false;
+
+
+    delay(500);
+    sei();
+    
+  } else if(buttonPushed && voltage > 800 && voltage < 950) { //right button 
+
+    cli();
+
+    if (selectorCharacter == (alphabet.length() - 1) )
+      selectorCharacter = 0;
+    else
+      selectorCharacter++;
+      
+    lcd.setCursor(15, 0);
+    lcd.print(alphabet[selectorCharacter]);
+    buttonPushed = false;
+
+    delay(500);
+    sei();
+  } else if (buttonPushed) {
+
+    cli();
     checkInput();
     alphabet.remove(selectorCharacter, 1);
     buttonPushed = false;
+
+
+    delay(500);
+    sei();
   }
 
   lcd.setCursor(2, 1);
@@ -59,10 +97,11 @@ void loop()
 
 // iterates character
 // uncomment this if you want iterator
+/*
   if (selectorCharacter < alphabet.length() - 1)
     selectorCharacter++;
   else if (selectorCharacter == alphabet.length() - 1)
-    selectorCharacter = 0;
+    selectorCharacter = 0; */
 
   checkIfGameOver();
 
@@ -79,7 +118,7 @@ void checkIfPlaying() {
     lcd.print("Press select to");
     lcd.setCursor(0,1);
     lcd.print("play!");
-    while(!buttonPushed){ delay(500); /*wtf is this garbage ass shit*/ }
+    while(!buttonPushed && (voltage < 950)){ delay(500); /*wtf is this garbage ass shit*/ }
     initializeGraphics();
     playing = true;
     buttonPushed = false;
@@ -109,6 +148,7 @@ void initializeGraphics()
 void buttonPush()
 {
   buttonPushed = true;
+  voltage = analogRead(1);
 }
 
 void drawHangman(int errorCount) 
