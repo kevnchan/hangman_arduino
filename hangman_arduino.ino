@@ -137,8 +137,8 @@ void initializeGraphics()
   lcd.write(byte(1));
   lcd.setCursor(0, 1);
   lcd.print("l");
-  lcd.setCursor(3,0);
-  lcd.print("Pick a char:");
+  lcd.setCursor(5,0);
+  lcd.print("Pick char:");
 
 
   //Add Kevins letterspacings to GUI on bottom row
