@@ -84,7 +84,9 @@ void loop()
     checkInput();
     alphabet.remove(selectorCharacter, 1);
     buttonPushed = false;
-
+    if (selectorCharacter == alphabet.length()) {
+      selectorCharacter = 0;
+    }
 
     delay(500);
     sei();
