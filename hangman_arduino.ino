@@ -104,7 +104,18 @@ void loop()
     }
     sei();
     delayCustom(500);
-  }
+  } /*else if (buttonPushed && voltage < 791 && voltage > 788) {
+    cli();
+    voltage = 0;
+    lcd.setCursor(2,0);
+    lcd.print("P");
+    buttonPushed = false;
+    sei();
+    while (!buttonPushed || voltage > 791 || voltage < 788) {}
+    lcd.setCursor(2,0);
+    lcd.print(" ");
+    delayCustom(500);
+  }*/
 
   lcd.setCursor(2, 1);
   lcd.print(displayWord);
