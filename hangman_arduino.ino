@@ -15,6 +15,7 @@ int selectorCharacter = 0;
 static bool playing = false;
 
 volatile int voltage = 0;
+volatile long millsec = 0;
 
 void setup() 
 {
@@ -29,7 +30,15 @@ void setup()
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
   attachInterrupt(0, buttonPush, RISING);
-  // Remember to include interrupts   
+  // Remember to include interrupts  
+
+  cli();
+  TCCR2A = 0;
+  TCCR2B = 0;
+  TCCR2B |= (1 << 2); // set frequency to clk/64 --> 250 kHz
+  TCNT2 = 5;
+  TIMSK2 |= (1 << 0); // enable overflow interrupts
+  sei();
 }
 
 void loop() 
@@ -46,8 +55,8 @@ void loop()
   selectorCharacter = Serial.readString()[0];*/
   if (buttonPushed && voltage > 920 && voltage < 924) { // left button
 
-    voltage = 0;
     cli();
+    voltage = 0;
     if (selectorCharacter == 0)
       selectorCharacter = alphabet.length() - 1;
     else
@@ -56,15 +65,12 @@ void loop()
     lcd.setCursor(15, 0);
     lcd.print(alphabet[selectorCharacter]);
     buttonPushed = false;
-
-
-    delay(500);
     sei();
+    delayCustom(500);
     
   } else if(buttonPushed && voltage > 1000 && voltage < 1004) { //right button 
-
-    voltage = 0;
     cli();
+    voltage = 0;
 
     if (selectorCharacter == (alphabet.length() - 1) )
       selectorCharacter = 0;
@@ -74,22 +80,20 @@ void loop()
     lcd.setCursor(15, 0);
     lcd.print(alphabet[selectorCharacter]);
     buttonPushed = false;
-
-    delay(500);
     sei();
+    delayCustom(500);
   } else if (buttonPushed && voltage == 1023) {
-
-    voltage = 0;
     cli();
+    voltage = 0;
+ 
     checkInput();
     alphabet.remove(selectorCharacter, 1);
     buttonPushed = false;
     if (selectorCharacter == alphabet.length()) {
       selectorCharacter = 0;
     }
-
-    delay(500);
     sei();
+    delayCustom(500);
   }
 
   lcd.setCursor(2, 1);
@@ -123,7 +127,7 @@ void checkIfPlaying() {
     lcd.print("Press select to");
     lcd.setCursor(0,1);
     lcd.print("play!");
-    while(!buttonPushed || (voltage < 1023)){ delay(500); /*wtf is this garbage ass shit*/ }
+    while(!buttonPushed || (voltage < 1023)){ delayCustom(500); /*wtf is this garbage ass shit*/ }
     voltage = 0;
     initializeGraphics();
     playing = true;
@@ -188,19 +192,29 @@ void checkInput() {
 void checkIfGameOver() {
   if (errorCount > 5) 
   {
-    delay(1000);
+    delayCustom(1000);
     lcd.clear();
     playing == false;
     lcd.print("GAME OVER!");
     while (!buttonPushed){}
   } else if (displayWord == answer)
   {
-    delay(1000);
+    delayCustom(1000);
     lcd.clear();
     playing == false;
     lcd.print("Lock unlocked!");
     while(!buttonPushed){}
   }
+}
+
+ISR(TIMER2_OVF_vect) { 
+  millsec++;
+  TCNT2 = 5;
+}
+
+void delayCustom(long duration) {
+  long startTime = millsec;
+  while (millsec - startTime < duration){}
 }
 
 
