@@ -44,8 +44,9 @@ void loop()
   //comment this if you want to iterator
   /*while (Serial.available() < 1) {}
   selectorCharacter = Serial.readString()[0];*/
-  if (buttonPushed && voltage > 500 && voltage < 800) { // left button
+  if (buttonPushed && voltage > 920 && voltage < 924) { // left button
 
+    voltage = 0;
     cli();
     if (selectorCharacter == 0)
       selectorCharacter = alphabet.length() - 1;
@@ -60,8 +61,9 @@ void loop()
     delay(500);
     sei();
     
-  } else if(buttonPushed && voltage > 800 && voltage < 950) { //right button 
+  } else if(buttonPushed && voltage > 1000 && voltage < 1004) { //right button 
 
+    voltage = 0;
     cli();
 
     if (selectorCharacter == (alphabet.length() - 1) )
@@ -75,8 +77,9 @@ void loop()
 
     delay(500);
     sei();
-  } else if (buttonPushed) {
+  } else if (buttonPushed && voltage == 1023) {
 
+    voltage = 0;
     cli();
     checkInput();
     alphabet.remove(selectorCharacter, 1);
@@ -118,7 +121,8 @@ void checkIfPlaying() {
     lcd.print("Press select to");
     lcd.setCursor(0,1);
     lcd.print("play!");
-    while(!buttonPushed && (voltage < 950)){ delay(500); /*wtf is this garbage ass shit*/ }
+    while(!buttonPushed || (voltage < 1023)){ delay(500); /*wtf is this garbage ass shit*/ }
+    voltage = 0;
     initializeGraphics();
     playing = true;
     buttonPushed = false;
