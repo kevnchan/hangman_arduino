@@ -217,9 +217,9 @@ void checkIfGameOver() {
 
 ISR(TIMER2_OVF_vect) { 
   millsec++;
-  TCNT2 = 5;
   if (millsec % 1000 == 0)
     secPassed = true;
+  TCNT2 = 5;
 }
 
 void delayCustom(long duration) {
