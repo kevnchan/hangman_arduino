@@ -72,7 +72,8 @@ void loop()
   lcd.print(alphabet[selectorCharacter]);
 
   if (buttonPushed && voltage > 920 && voltage < 924) { // left button
-
+    Serial.print("Left button pushed at: ");
+    Serial.print(millsec);
     cli();
     voltage = 0;
     if (selectorCharacter == 0)
@@ -87,6 +88,8 @@ void loop()
     delayCustom(500);
     
   } else if(buttonPushed && voltage > 1000 && voltage < 1004) { //right button 
+    Serial.print("Right button pushed at: ");
+    Serial.print(millsec);
     cli();
     voltage = 0;
 
@@ -100,7 +103,9 @@ void loop()
     buttonPushed = false;
     sei();
     delayCustom(500);
-  } else if (buttonPushed && voltage == 1023) {
+  } else if (buttonPushed && voltage == 1023) { //select button
+    Serial.print("Select button pushed at: ");
+    Serial.print(millsec);
     cli();
     voltage = 0;
  
@@ -133,8 +138,12 @@ void checkIfPlaying() {
     lcd.setCursor(0,1);
     lcd.print("play!");
     while(!buttonPushed || (voltage < 1023)){ delayCustom(500); /*wtf is this garbage ass shit*/ }
+    Serial.print("Gameplay began at: ");
+    Serial.print(millsec);
     voltage = 0;
     initializeGraphics();
+    Serial.print("Graphics initialized at: ");
+    Serial.print(millsec);
     playing = true;
     buttonPushed = false;
   }
@@ -151,8 +160,6 @@ void initializeGraphics()
   lcd.setCursor(8,0);
   lcd.print("Select:");
 
-
-  //Add Kevins letterspacings to GUI on bottom row
   lcd.setCursor(2, 1);
   for (int i = 0; i < answer.length(); i++) 
     displayWord += "_";
@@ -185,8 +192,10 @@ void checkInput() {
     if (alphabet[selectorCharacter] == answer[i]) {
       displayWord[i] = answer[i];
       found = true;
-
+      
       digitalWrite(3, HIGH);
+      Serial.print("Correct input occured at: ");
+      Serial.print(millsec);
       
     }
   }
@@ -196,6 +205,8 @@ void checkInput() {
     drawHangman(errorCount);
 
     digitalWrite(3, LOW);
+    Serial.print("Incorrect input occured at: ");
+    Serial.print(millsec);
   }
 }
 
@@ -206,6 +217,8 @@ void checkIfGameOver() {
     lcd.clear();
     playing == false;
     lcd.print("Locked Out!");
+    Serial.print("Endgame occurred at: ");
+    Serial.print(millsec);
     while (!buttonPushed){}
   } else if (displayWord == answer)
   {
@@ -213,6 +226,8 @@ void checkIfGameOver() {
     lcd.clear();
     playing == false;
     lcd.print("Lock unlocked!");
+    Serial.print("Endgame occurred at: ");
+    Serial.print(millsec);
     while(!buttonPushed){}
   }
 }
