@@ -21,6 +21,8 @@ int time = 61;
 
 void setup() 
 {
+  
+  
   Serial.begin(9600);
 	lcd.createChar(0, post);
   lcd.createChar(1, noose);
@@ -34,6 +36,11 @@ void setup()
   attachInterrupt(0, buttonPush, RISING);
   // Remember to include interrupts  
 
+ 
+  
+  pinMode(3, OUTPUT); // for printing Y
+  digitalWrite(3, LOW);
+
   cli();
   TCCR2A = 0;
   TCCR2B = 0;
@@ -45,6 +52,7 @@ void setup()
 
 void loop() 
 {
+
   checkIfPlaying();
   // prints selector character in top right
 
@@ -104,18 +112,7 @@ void loop()
     }
     sei();
     delayCustom(500);
-  } /*else if (buttonPushed && voltage < 791 && voltage > 788) {
-    cli();
-    voltage = 0;
-    lcd.setCursor(2,0);
-    lcd.print("P");
-    buttonPushed = false;
-    sei();
-    while (!buttonPushed || voltage > 791 || voltage < 788) {}
-    lcd.setCursor(2,0);
-    lcd.print(" ");
-    delayCustom(500);
-  }*/
+  }
 
   lcd.setCursor(2, 1);
   lcd.print(displayWord);
@@ -188,12 +185,17 @@ void checkInput() {
     if (alphabet[selectorCharacter] == answer[i]) {
       displayWord[i] = answer[i];
       found = true;
+
+      digitalWrite(3, HIGH);
+      
     }
   }
 
   if (!found) {
     errorCount++;
     drawHangman(errorCount);
+
+    digitalWrite(3, LOW);
   }
 }
 
@@ -203,7 +205,7 @@ void checkIfGameOver() {
     delayCustom(1000);
     lcd.clear();
     playing == false;
-    lcd.print("GAME OVER!");
+    lcd.print("Locked Out!");
     while (!buttonPushed){}
   } else if (displayWord == answer)
   {
