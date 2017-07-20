@@ -2,28 +2,26 @@
 #include <Arduino.h>
 #include "custom_characters.h"
 
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // initialize LCD
 static bool buttonPushed = false;
-int button = 2; // input pin
+int button = 2; // interrupt line pin
 
-const String answer = "applesauce";
+const String answer = "spillproof";
 String displayWord = "";
 int errorCount = 0;
-// char selectorCharacter = 97; // starts at a and will iterate in loop
-String alphabet = "abcdefghijklmnopqrstuvwxyz";
-int selectorCharacter = 0;
-static bool playing = false;
+String alphabet = "abcdefghijklmnopqrstuvwxyz"; //list of available characters to select
+int selectorCharacter = 0; //index of the currently selected character
+static bool playing = false; //checked to start game and for gameover state
 
-volatile int voltage = 0;
-volatile long millsec = 0;
-volatile bool secPassed = 0;
-int time = 61;
+volatile int voltage = 0; //stores voltage to distinguish buttons
+volatile long millsec = 0; //custom variable for millis() funciton
+volatile bool secPassed = 0; //triggers display timer countdown after millis reaches multiple of 1000
+int time = 61; //starting time
 
 void setup() 
-{
-  
-  
+{  
   Serial.begin(9600);
+  // initialize lcd with hangman characters
 	lcd.createChar(0, post);
   lcd.createChar(1, noose);
   lcd.createChar(2, head);
@@ -33,14 +31,13 @@ void setup()
   lcd.createChar(6, right_foot);
   lcd.createChar(7, left_foot);
   lcd.begin(16, 2);
-  attachInterrupt(0, buttonPush, RISING);
-  // Remember to include interrupts  
-
- 
   
-  pinMode(3, OUTPUT); // for printing Y
-  digitalWrite(3, LOW);
+  attachInterrupt(0, buttonPush, RISING); //attach interrupt to pin2
 
+  pinMode(3, OUTPUT); // for printing Y
+  digitalWrite(3, LOW); // start in low state
+
+  //setup timer2
   cli();
   TCCR2A = 0;
   TCCR2B = 0;
@@ -54,26 +51,17 @@ void loop()
 {
 
   checkIfPlaying();
-  // prints selector character in top right
-
-  //timer area
-  if (secPassed && time > 0) {
-    time--;
-    printTime();    
-    secPassed = false;
-  }
-
-  if (time == 0)
-    errorCount = 6; //ends game
-
-  //timer area
+  clockTime();
 
   lcd.setCursor(15, 0);
   lcd.print(alphabet[selectorCharacter]);
 
-  if (buttonPushed && voltage > 920 && voltage < 924) { // left button
+  //reset output Y
+  digitalWrite(3, LOW);
+
+  if (buttonPushed && voltage > 735 && voltage < 740) { // left button
     Serial.print("Left button pushed at: ");
-    Serial.print(millsec);
+    Serial.println(millsec);
     cli();
     voltage = 0;
     if (selectorCharacter == 0)
@@ -87,9 +75,9 @@ void loop()
     sei();
     delayCustom(500);
     
-  } else if(buttonPushed && voltage > 1000 && voltage < 1004) { //right button 
+  } else if(buttonPushed && voltage > 860 && voltage < 865) { //right button 
     Serial.print("Right button pushed at: ");
-    Serial.print(millsec);
+    Serial.println(millsec);
     cli();
     voltage = 0;
 
@@ -105,7 +93,7 @@ void loop()
     delayCustom(500);
   } else if (buttonPushed && voltage == 1023) { //select button
     Serial.print("Select button pushed at: ");
-    Serial.print(millsec);
+    Serial.println(millsec);
     cli();
     voltage = 0;
  
@@ -123,7 +111,7 @@ void loop()
   lcd.print(displayWord);
 
   checkIfGameOver();
-
+  
 }
 
 // --------------------------------------------------------------------------
@@ -137,13 +125,13 @@ void checkIfPlaying() {
     lcd.print("Press select to");
     lcd.setCursor(0,1);
     lcd.print("play!");
-    while(!buttonPushed || (voltage < 1023)){ delayCustom(500); /*wtf is this garbage ass shit*/ }
+    while(!buttonPushed || (voltage < 1023)){ delayCustom(5); }
     Serial.print("Gameplay began at: ");
-    Serial.print(millsec);
+    Serial.println(millsec);
     voltage = 0;
     initializeGraphics();
     Serial.print("Graphics initialized at: ");
-    Serial.print(millsec);
+    Serial.println(millsec);
     playing = true;
     buttonPushed = false;
   }
@@ -161,7 +149,7 @@ void initializeGraphics()
   lcd.print("Select:");
 
   lcd.setCursor(2, 1);
-  for (int i = 0; i < answer.length(); i++) 
+  for (int i = 0; i < answer.length(); i++) // sets up string of underscores
     displayWord += "_";
 
   lcd.print(displayWord);
@@ -173,7 +161,7 @@ void buttonPush()
   voltage = analogRead(1);
 }
 
-void drawHangman(int errorCount) 
+void drawHangman(int errorCount) //
 {
   if (errorCount == 1) {
     lcd.setCursor(1, 0);
@@ -195,7 +183,7 @@ void checkInput() {
       
       digitalWrite(3, HIGH);
       Serial.print("Correct input occured at: ");
-      Serial.print(millsec);
+      Serial.println(millsec);
       
     }
   }
@@ -204,9 +192,9 @@ void checkInput() {
     errorCount++;
     drawHangman(errorCount);
 
-    digitalWrite(3, LOW);
+    // digitalWrite(3, LOW);
     Serial.print("Incorrect input occured at: ");
-    Serial.print(millsec);
+    Serial.println(millsec);
   }
 }
 
@@ -216,15 +204,17 @@ void checkIfGameOver() {
     delayCustom(1000);
     lcd.clear();
     playing == false;
+    lcd.clear();
     lcd.print("Locked Out!");
     Serial.print("Endgame occurred at: ");
-    Serial.print(millsec);
-    while (!buttonPushed){}
+    Serial.println(millsec);
+    while (!buttonPushed){ }
   } else if (displayWord == answer)
   {
     delayCustom(1000);
     lcd.clear();
     playing == false;
+    lcd.clear();
     lcd.print("Lock unlocked!");
     Serial.print("Endgame occurred at: ");
     Serial.print(millsec);
@@ -255,4 +245,14 @@ void printTime() {
   lcd.print(seconds);
 }
 
+void clockTime() {
+  if (secPassed && time > 0) {
+    time--;
+    printTime();    
+    secPassed = false;
+  }
+
+  if (time == 0)
+    errorCount = 6; //ends 
+}
 
